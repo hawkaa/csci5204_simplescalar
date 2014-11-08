@@ -574,6 +574,7 @@ cache_access(struct cache_t *cp,	/* cache to access */
 
   /* **MISS** */
   cp->misses++;
+  cp->bip_counter = ++cp->bip_counter % cp->bip_counter_limit;
 
   /* select the appropriate block to replace, and re-link this entry to
      the appropriate place in the way list */
@@ -584,8 +585,15 @@ cache_access(struct cache_t *cp,	/* cache to access */
     update_way_list(&cp->sets[set], repl, Head);
     break;
   case LIP:
+    repl = cp->sets[set].way_tail;
+    break;
   case BIP:
     repl = cp->sets[set].way_tail;
+    if (cp->bip_counter == 0) {
+      debug("PUTTING IN FRONT");
+      update_way_list(&cp->sets[set], repl, Head);
+    } 
+    break;
   case Random:
     {
       int bindex = myrand() & (cp->assoc - 1);
@@ -686,7 +694,8 @@ cache_access(struct cache_t *cp,	/* cache to access */
       update_way_list(&cp->sets[set], blk, Head);
     }
 
-  if (!blk->way_next && cp->policy == LIP) {
+  if (!blk->way_next && (cp->policy == LIP || cp->policy == BIP)) {
+    debug("Setting last to front");
     update_way_list(&cp->sets[set], blk, Head);
   }
 
