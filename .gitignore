@@ -1,0 +1,5 @@
+*.o
+*.a
+sim-outorder
+sim-cache
+
