@@ -409,6 +409,8 @@ cache_char2policy(char c)		/* replacement policy as a char */
   case 'l': return LRU;
   case 'r': return Random;
   case 'f': return FIFO;
+  case 'a': return LIP;
+  case 'b': return BIP;
   default: fatal("bogus replacement policy, `%c'", c);
   }
 }
@@ -427,6 +429,8 @@ cache_config(struct cache_t *cp,	/* cache instance */
 	  cp->policy == LRU ? "LRU"
 	  : cp->policy == Random ? "Random"
 	  : cp->policy == FIFO ? "FIFO"
+	  : cp->policy == LIP ? "LIP"
+	  : cp->policy == BIP ? "BIP"
 	  : (abort(), ""));
 }
 
@@ -575,6 +579,9 @@ cache_access(struct cache_t *cp,	/* cache to access */
     repl = cp->sets[set].way_tail;
     update_way_list(&cp->sets[set], repl, Head);
     break;
+  case LIP:
+  case BIP:
+    repl = cp->sets[set].way_tail;
   case Random:
     {
       int bindex = myrand() & (cp->assoc - 1);
@@ -674,6 +681,10 @@ cache_access(struct cache_t *cp,	/* cache to access */
       /* move this block to head of the way (MRU) list */
       update_way_list(&cp->sets[set], blk, Head);
     }
+
+  if (!blk->way_next && cp->policy == LIP) {
+    update_way_list(&cp->sets[set], blk, Head);
+  }
 
   /* tag is unchanged, so hash links (if they exist) are still valid */
 
