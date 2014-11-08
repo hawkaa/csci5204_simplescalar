@@ -1,0 +1,22 @@
+TO RUN THE BENCHMARKS: 
+
+GCC:
+
+  to run:               sim-outorder gcc -O 166.i
+  to test output:       diff 166.s 166.s.ref
+
+ANAGRAM:
+
+  to run:               sim-outorder anagram words < anagram.in > OUT
+  to test output:       diff OUT anagram.out
+
+GZIP:
+
+  to run:               sim-outorder gzip < input.graphic > OUT
+  to test output:       diff OUT input.graphic.out
+
+GO:
+
+  to run:               sim-outorder go 50 21 5stone9.in > OUT
+  to test output:       diff OUT 5stone21.out
+
