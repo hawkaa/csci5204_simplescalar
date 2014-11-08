@@ -163,23 +163,28 @@ static char *cache_dl1_opt;
 /* l1 data cache hit latency (in cycles) */
 static int cache_dl1_lat;
 
+static int cache_dl1_bip_counter_limit;
+
 /* l2 data cache config, i.e., {<config>|none} */
 static char *cache_dl2_opt;
 
 /* l2 data cache hit latency (in cycles) */
 static int cache_dl2_lat;
+static int cache_dl2_bip_counter_limit;
 
 /* l1 instruction cache config, i.e., {<config>|dl1|dl2|none} */
 static char *cache_il1_opt;
 
 /* l1 instruction cache hit latency (in cycles) */
 static int cache_il1_lat;
+static int cache_il1_bip_counter_limit;
 
 /* l2 instruction cache config, i.e., {<config>|dl1|dl2|none} */
 static char *cache_il2_opt;
 
 /* l2 instruction cache hit latency (in cycles) */
 static int cache_il2_lat;
+static int cache_il2_bip_counter_limit;
 
 /* flush caches on system calls */
 static int flush_on_syscalls;
@@ -804,6 +809,15 @@ sim_reg_options(struct opt_odb_t *odb)
 	      &cache_il2_lat, /* default */6,
 	      /* print */TRUE, /* format */NULL);
 
+  opt_reg_int(odb, "-cache:dl1bip", "dl1 bip counter limit", 
+              &cache_dl1_bip_counter_limit, 16, TRUE, NULL);
+  opt_reg_int(odb, "-cache:dl2bip", "dl2 bip counter limit", 
+              &cache_dl2_bip_counter_limit, 16, TRUE, NULL);
+  opt_reg_int(odb, "-cache:il1bip", "il1 bip counter limit", 
+              &cache_il1_bip_counter_limit, 16, TRUE, NULL);
+  opt_reg_int(odb, "-cache:il2bip", "il2 bip counter limit", 
+              &cache_il2_bip_counter_limit, 16, TRUE, NULL);
+
   opt_reg_flag(odb, "-cache:flush", "flush caches on system calls",
 	       &flush_on_syscalls, /* default */FALSE, /* print */TRUE, NULL);
 
@@ -1016,7 +1030,8 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
 	fatal("bad l1 D-cache parms: <name>:<nsets>:<bsize>:<assoc>:<repl>");
       cache_dl1 = cache_create(name, nsets, bsize, /* balloc */FALSE,
 			       /* usize */0, assoc, cache_char2policy(c),
-			       dl1_access_fn, /* hit lat */cache_dl1_lat);
+			       dl1_access_fn, /* hit lat */cache_dl1_lat,
+             cache_dl1_bip_counter_limit);
 
       /* is the level 2 D-cache defined? */
       if (!mystricmp(cache_dl2_opt, "none"))
@@ -1029,7 +1044,8 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
 		  "<name>:<nsets>:<bsize>:<assoc>:<repl>");
 	  cache_dl2 = cache_create(name, nsets, bsize, /* balloc */FALSE,
 				   /* usize */0, assoc, cache_char2policy(c),
-				   dl2_access_fn, /* hit lat */cache_dl2_lat);
+				   dl2_access_fn, /* hit lat */cache_dl2_lat,
+             cache_dl2_bip_counter_limit);
 	}
     }
 
@@ -1072,7 +1088,9 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
 	fatal("bad l1 I-cache parms: <name>:<nsets>:<bsize>:<assoc>:<repl>");
       cache_il1 = cache_create(name, nsets, bsize, /* balloc */FALSE,
 			       /* usize */0, assoc, cache_char2policy(c),
-			       il1_access_fn, /* hit lat */cache_il1_lat);
+			       il1_access_fn, /* hit lat */cache_il1_lat,
+             cache_il1_bip_counter_limit);
+
 
       /* is the level 2 D-cache defined? */
       if (!mystricmp(cache_il2_opt, "none"))
@@ -1091,7 +1109,8 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
 		  "<name>:<nsets>:<bsize>:<assoc>:<repl>");
 	  cache_il2 = cache_create(name, nsets, bsize, /* balloc */FALSE,
 				   /* usize */0, assoc, cache_char2policy(c),
-				   il2_access_fn, /* hit lat */cache_il2_lat);
+				   il2_access_fn, /* hit lat */cache_il2_lat,
+             cache_il2_bip_counter_limit);
 	}
     }
 
@@ -1106,7 +1125,7 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
       itlb = cache_create(name, nsets, bsize, /* balloc */FALSE,
 			  /* usize */sizeof(md_addr_t), assoc,
 			  cache_char2policy(c), itlb_access_fn,
-			  /* hit latency */1);
+			  /* hit latency */1, 16);
     }
 
   /* use a D-TLB? */
@@ -1120,7 +1139,7 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
       dtlb = cache_create(name, nsets, bsize, /* balloc */FALSE,
 			  /* usize */sizeof(md_addr_t), assoc,
 			  cache_char2policy(c), dtlb_access_fn,
-			  /* hit latency */1);
+			  /* hit latency */1, 16);
     }
 
   if (cache_dl1_lat < 1)

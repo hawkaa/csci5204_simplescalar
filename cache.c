@@ -270,7 +270,8 @@ cache_create(char *name,		/* name of the cache */
 					   md_addr_t baddr, int bsize,
 					   struct cache_blk_t *blk,
 					   tick_t now),
-	     unsigned int hit_latency)	/* latency in cycles for a hit */
+	     unsigned int hit_latency,	/* latency in cycles for a hit */
+       int bip_counter_limit)
 {
   struct cache_t *cp;
   struct cache_blk_t *blk;
@@ -311,6 +312,7 @@ cache_create(char *name,		/* name of the cache */
   cp->policy = policy;
   cp->hit_latency = hit_latency;
   cp->bip_counter = 0;
+  cp->bip_counter_limit = bip_counter_limit;
 
   /* miss/replacement functions */
   cp->blk_access_fn = blk_access_fn;
@@ -332,6 +334,7 @@ cache_create(char *name,		/* name of the cache */
   debug("%s: cp->set_mask  = 0x%08x", cp->name, cp->set_mask);
   debug("%s: cp->tag_shift = %d", cp->name, cp->tag_shift);
   debug("%s: cp->tag_mask  = 0x%08x", cp->name, cp->tag_mask);
+  debug("%s: cp->bip_counter_limit = %d", cp->name, cp->bip_counter_limit);
 
   /* initialize cache stats */
   cp->hits = 0;
