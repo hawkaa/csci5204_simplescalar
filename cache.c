@@ -415,6 +415,8 @@ cache_char2policy(char c)		/* replacement policy as a char */
   case 'f': return FIFO;
   case 'a': return LIP;
   case 'b': return BIP;
+  case 'c': return LIP2;
+  case 'd': return BIP2;
   default: fatal("bogus replacement policy, `%c'", c);
   }
 }
@@ -435,6 +437,8 @@ cache_config(struct cache_t *cp,	/* cache instance */
 	  : cp->policy == FIFO ? "FIFO"
 	  : cp->policy == LIP ? "LIP"
 	  : cp->policy == BIP ? "BIP"
+	  : cp->policy == LIP2 ? "LIP2"
+	  : cp->policy == BIP2 ? "BIP2"
 	  : (abort(), ""));
 }
 
@@ -585,9 +589,11 @@ cache_access(struct cache_t *cp,	/* cache to access */
     update_way_list(&cp->sets[set], repl, Head);
     break;
   case LIP:
+  case LIP2:
     repl = cp->sets[set].way_tail;
     break;
   case BIP:
+  case BIP2:
     repl = cp->sets[set].way_tail;
     if (cp->bip_counter == 0) {
       debug("PUTTING IN FRONT");
@@ -688,7 +694,7 @@ cache_access(struct cache_t *cp,	/* cache to access */
     blk->status |= CACHE_BLK_DIRTY;
 
   /* if LRU replacement and this is not the first element of list, reorder */
-  if (blk->way_prev && cp->policy == LRU)
+  if (blk->way_prev && (cp->policy == LRU || cp->policy == LIP2 || cp->policy == BIP2))
     {
       /* move this block to head of the way (MRU) list */
       update_way_list(&cp->sets[set], blk, Head);

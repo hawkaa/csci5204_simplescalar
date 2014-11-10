@@ -104,7 +104,9 @@ enum cache_policy {
   Random,	/* replace a random block */
   FIFO,		/* replace the oldest block in the set */
   LIP,    /* only promote if in LRU position */
-  BIP     /* counter */
+  BIP,     /* counter */
+  LIP2,
+  BIP2
 };
 
 /* block status values */
